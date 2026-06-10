@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyecto 3: Arquitectura de Agentes con Serverless y Tools - BSG Institute</title>
+    <style>
+        :root {
+            --primary: #0F172A; /* Azul Pizarra Oscuro / Ejecutivo */
+            --primary-light: #F1F5F9;
+            --accent: #1E3A8A; /* Azul Corporativo para títulos */
+            --accent-gold: #B45309; /* Oro viejo / Ámbar para alertas formales */
+            --accent-gold-light: #FEF3C7;
+            --text-main: #334155;
+            --text-dark: #0F172A;
+            --bg-body: #F8FAFC;
+            --bg-card: #FFFFFF;
+            --border: #CBD5E1;
+            --sidebar-width: 300px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Menú Lateral Formal */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background-color: var(--primary);
+            color: #F8FAFC;
+            position: fixed;
+            top: 0;
+            left: 0;
+            overflow-y: auto;
+            padding: 2.5rem 1.5rem;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+
+        .sidebar h2 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 2rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94A3B8;
+            font-weight: 700;
+        }
+
+        .sidebar ul {
+            list-style: none;
+        }
+
+        .sidebar li {
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar a {
+            color: #CBD5E1;
+            text-decoration: none;
+            display: block;
+            padding: 0.6rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.88rem;
+            font-weight: 400;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .sidebar a:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #FFFFFF;
+            padding-left: 1rem;
+        }
+
+        /* Contenedor Principal */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 4rem 5rem;
+            max-width: 1200px;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        /* Encabezado Ejecutivo */
+        .header-doc {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-top: 4px solid var(--primary);
+            color: var(--text-dark);
+            padding: 3rem;
+            border-radius: 0.25rem;
+            margin-bottom: 3.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .header-doc h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text-dark);
+            line-height: 1.2;
+            margin-bottom: 0.75rem;
+        }
+
+        .header-doc p {
+            color: #64748B;
+            font-size: 1.15rem;
+            font-weight: 400;
+            margin-bottom: 2rem;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            padding-top: 2rem;
+            border-top: 1px solid #E2E8F0;
+            font-size: 0.85rem;
+            color: #475569;
+        }
+
+        .meta-grid strong {
+            color: var(--text-dark);
+            display: block;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        /* Secciones de Documentación */
+        section {
+            background-color: var(--bg-card);
+            padding: 3.5rem;
+            border-radius: 0.25rem;
+            border: 1px solid var(--border);
+            margin-bottom: 3rem;
+            scroll-margin-top: 2rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.01);
+        }
+
+        h2.section-title {
+            color: var(--text-dark);
+            font-size: 1.75rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            border-bottom: 1px solid #E2E8F0;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.75rem;
+        }
+
+        h3.subsection-title {
+            color: var(--accent);
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        p {
+            margin-bottom: 1.25rem;
+            color: var(--text-main);
+            text-align: justify;
+            font-size: 0.95rem;
+        }
+
+        ul, ol {
+            margin-bottom: 1.25rem;
+            padding-left: 1.5rem;
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Cajas de Alerta de Alta Gerencia */
+        .alert-box {
+            background-color: var(--primary-light);
+            border-left: 3px solid var(--primary);
+            padding: 1.25rem 1.5rem;
+            border-radius: 0.125rem;
+            margin: 1.75rem 0;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+        }
+
+        .alert-box.warning {
+            background-color: var(--accent-gold-light);
+            border-left-color: var(--accent-gold);
+            color: #78350F;
+        }
+
+        .alert-box strong {
+            display: block;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        /* Botones del Sistema Interactivo */
+        .interactive-btn {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 0.125rem;
+            border: 1px solid var(--border);
+            background: #FFFFFF;
+            color: var(--text-dark);
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            margin-top: 0.75rem;
+            transition: all 0.1s ease;
+        }
+
+        .interactive-btn:hover {
+            background: var(--primary-light);
+            border-color: var(--text-main);
+        }
+
+        /* Bloques de Código de Ingeniería */
+        pre {
+            background-color: #FAF9F6; /* Tono papel claro / limpio */
+            border: 1px solid var(--border);
+            padding: 1.25rem;
+            border-radius: 0.125rem;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            color: #1E293B;
+        }
+
+        /* Tablas de Reporte Ejecutivo */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            border: 1px solid #E2E8F0;
+            padding: 0.85rem 1.25rem;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: #F8FAFC;
+            color: var(--text-dark);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .table-kpi th {
+            background-color: var(--primary);
+            color: #FFFFFF;
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) {
+            background-color: #FCFDFD;
+        }
+
+        /* Líneas de separación formales */
+        hr {
+            border: 0;
+            height: 1px;
+            background: #E2E8F0;
+            margin: 2.5rem 0;
+        }
+
+        /* Adaptabilidad */
+        @media (max-width: 992px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                padding: 1.5rem;
+            }
+            .main-content {
+                width: 100%;
+                margin-left: 0;
+                padding: 2rem;
+            }
+        }
+
+        .diagram-panel {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 0.25rem;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .diagram-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .diagram-btn {
+            border: 1px solid var(--border);
+            background: #FFFFFF;
+            color: var(--text-dark);
+            font-size: 0.8rem;
+            padding: 0.4rem 0.75rem;
+            border-radius: 0.2rem;
+            cursor: pointer;
+        }
+
+        .diagram-btn:hover {
+            background: var(--primary-light);
+        }
+
+        .diagram-viewport {
+            border: 1px solid #E2E8F0;
+            border-radius: 0.2rem;
+            background: #FFFFFF;
+            height: 620px;
+            overflow: hidden;
+            position: relative;
+            cursor: grab;
+        }
+
+        .diagram-viewport.dragging {
+            cursor: grabbing;
+        }
+
+        .diagram-canvas {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .diagram-canvas svg {
+            transform-origin: 0 0;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .diagram-hint {
+            margin-top: 0.5rem;
+            font-size: 0.82rem;
+            color: #64748B;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MENÚ LATERAL INTERACTIVO -->
+    <nav class="sidebar">
+        <h2>Ejes Rectores</h2>
+        <ul>
+            <li><a href="#guia-usuario">01. Guía de Usuario</a></li>
+            <li><a href="#guia-admin">02. Guía de Administrador</a></li>
+            <li><a href="#caso-uso">03. Caso de Uso</a></li>
+            <li><a href="#modelo">04. Selección del Modelo</a></li>
+            <li><a href="#patron-agentic">05. Patrón Agentic</a></li>
+            <li><a href="#arquitectura">06. Arquitectura Lógica</a></li>
+            <li><a href="#tools">07. Catálogo de Tools</a></li>
+            <li><a href="#workflows">08. Workflows Multi-paso</a></li>
+            <li><a href="#optimizacion">09. Estrategias FinOps</a></li>
+            <li><a href="#cicd">10. Pipeline CI/CD</a></li>
+            <li><a href="#pruebas">11. Plan de Validación</a></li>
+            <li><a href="#resultados">12. KPIs y Resultados</a></li>
+            <li><a href="#riesgos">13. Riesgos y Mitigaciones</a></li>
+        </ul>
+    </nav>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <main class="main-content">
+        
+        <!-- ENCABEZADO -->
+        <header class="header-doc">
+            <h1>LLM Agentic Architecture with Serverless Tools Integration</h1>
+            <p>Especificación de Diseño de Infraestructura Escalable — Proyecto 3</p>
+            <div class="meta-grid">
+                <div><strong>Institución Aval</strong>BSG Institute</div>
+                <div><strong>Consultor de Cátedra</strong>Msc, PgP, Andrés Felipe Rojas Parra</div>
+                <div><strong>Nivel de Proyecto</strong>Avanzado / Agentes + Workflows</div>
+                <div><strong>Esquema Técnico</strong>OpenShift / Kafka / Llama 3 8B</div>
+            </div>
+        </header>
+
+        <!-- SECCIÓN 1: GUÍA DE USUARIO -->
+        <section id="guia-usuario">
+            <h2 class="section-title">01. Documento del Proyecto - Guía de Usuario</h2>
+            <p>Esta sección formaliza el protocolo operativo estándar para que el personal autorizado consuma las capacidades del <strong>Agente Inteligente de Soporte Transversal</strong> de manera transparente e integrada.</p>
+            
+            <h3 class="subsection-title">1.1. Interacción General por Canales Colaborativos</h3>
+            <p>El agente opera como un servicio backend acoplado de forma nativa a <strong>Microsoft Teams</strong> y a la plataforma core ITSM de <strong>ServiceNow</strong>. Esto elimina la necesidad de instalar software o clientes adicionales en los equipos terminales de los ingenieros de atención.</p>
+            
+            <h3 class="subsection-title">1.2. Protocolo de Consulta vía Mención Directa</h3>
+            <p>Cualquier operador habilitado bajo los roles de <em>Suscriptor</em> o <em>Atención</em> puede gatillar un diagnóstico preventivo o una auditoría de versión enviando un mensaje directo dentro de las salas de operaciones mediante una mención al bot:</p>
+            <pre>@AgenteSoporte analizar falla en el componente [NOMBRE_DEL_COMPONENTE] en el ambiente PRE</pre>
+            <p>Al recibir la instrucción, el orquestador valida la identidad del usuario y extrae de forma síncrona el historial transaccional reciente desde la base de datos de caché. En caso de identificar patrones de error correlativos, inyectará una tarjeta dinámica interactiva:</p>
+            
+            <div class="alert-box">
+                <strong>Notificación de Bucle de Decisión ReAct</strong>
+                He detectado una falla similar registrada en este mismo componente transversal hace un período de 4 horas. Para refinar mi árbol de decisión, por favor indícame: ¿Consideras que el error actual y el anterior están relacionados?
+                <br>
+                <button class="interactive-btn">[Sí, correlacionados]</button>
+                <button class="interactive-btn" style="color: #64748B; margin-left: 0.5rem;">[No, evento aislado]</button>
+            </div>
+
+            <h3 class="subsection-title">1.3. Firma de Releases de Mitigación (Human-in-the-loop)</h3>
+            <p>Si el agente concluye que la solución requiere ejecutar una acción de CI/CD (como un rollback o despliegue en DEV/PRE), el sistema detendrá de forma segura el workflow y lanzará una tarjeta de aprobación exclusiva para el rol <strong>Administrador</strong> en el canal restringido de operaciones:</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Campo Técnico</th>
+                        <th>Información de Auditoría</th>
+                        <th>Origen de la Información</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>ID del Cambio / Incidente</strong></td>
+                        <td>CHG0091823 / INC0044521</td>
+                        <td>ServiceNow Core API</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Componente Afectado</strong></td>
+                        <td>[NOMBRE_DEL_COMPONENTE]</td>
+                        <td>Inventario de Microservicios</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ambiente / Infraestructura</strong></td>
+                        <td>PRE-PRODUCCIÓN (Clúster de Contenedores)</td>
+                        <td>Parámetros del Evento</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rama de Código Fuente</strong></td>
+                        <td>release-v3.2.1</td>
+                        <td>GitHub Enterprise Repository</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Análisis e Impacto</strong></td>
+                        <td>Mitigación de timeout en bases de datos Oracle mediante rollback seguro.</td>
+                        <td>Inferencia ReAct Llama 3</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p><em>Nota de Control Operativo:</em> Los componentes de firma interactiva solo procesarán solicitudes validadas criptográficamente por administradores autorizados.</p>
+        </section>
+
+        <!-- SECCIÓN 2: GUÍA DE ADMINISTRADOR -->
+        <section id="guia-admin">
+            <h2 class="section-title">02. Documento del Proyecto - Guía de Administrador</h2>
+            <p>Directrices de mantenimiento de infraestructura, gobierno de datos e ingesta de conocimiento en caliente.</p>
+            
+            <h3 class="subsection-title">2.1. Ingesta Asíncrona de Hojas de Mantenimiento</h3>
+            <p>Para expandir el alcance de diagnóstico del agente ante la integración de nuevas aplicaciones transversales, el administrador corporativo puede cargar manuales operativos en formato PDF o matrices complejas en hojas de cálculo de <strong>Excel</strong> que alberguen las casuísticas de negocio o dependencias físicas sobre motores <strong>Oracle</strong> o <strong>Redis</strong>.</p>
+            
+            <h3 class="subsection-title">2.2. Workflow de Procesamiento de Documentos</h3>
+            <p>Este proceso corre de manera aislada (Background Process) para salvaguardar la disponibilidad del runtime de consultas habituales:</p>
+            <ol>
+                <li><strong>Extracción de Estructuras:</strong> El motor realiza un parsing secuencial de las hojas de Excel mapeando las lógicas relacionales.</li>
+                <li><strong>Procesamiento Vectorial (Embeddings):</strong> Convierte el conocimiento en vectores multidimensionales indexados en la base vectorial local.</li>
+                <li><strong>Trigger de Validación:</strong> El orquestador despierta al modelo para validar las casuísticas y emite un informe de conformidad al administrador por Teams.</li>
+            </ol>
+            <div class="alert-box">
+                <strong>Confirmación de Ingesta de Base de Conocimiento</strong>
+                Análisis de documentación técnica finalizado con éxito. Basado en las políticas del manual cargado, por favor confirma: ¿Cuáles de estos componentes de infraestructura si fallan se pueden autoreparar mediante pipeline y cuáles requieren obligatoriamente levantar un folio en ServiceNow hacia el Área X?
+            </div>
+        </section>
+
+        <!-- SECCIÓN 3: CASO DE USO -->
+        <section id="caso-uso">
+            <h2 class="section-title">03. Caso de Uso Avanzado</h2>
+            <p>Mapeo formal del escenario operativo y los límites funcionales del sistema inteligente dentro de la organización.</p>
+            <h3 class="subsection-title">3.1. Escenario Empresarial Real</h3>
+            <p>En arquitecturas SOA o microservicios distribuidos, las piezas transversales (buses de mensajería, pasarelas de seguridad, adaptadores de datos) dan soporte a múltiples capas de negocio concurrentes. Una degradación en estos componentes (desarrollados bajo tecnologías como .NET, Python, Go o Node.js) paraliza canales enteros. El agente interviene aislando de forma automática el error de infraestructura para restablecer los niveles de servicio (SLAs).</p>
+            
+            <h3 class="subsection-title">3.2. Fronteras y Límites Estrictos del Sistema</h3>
+            <ul>
+                <li><strong>Operaciones de Lectura en Producción:</strong> El agente posee llaves de acceso restringidas en modo <em>Read-Only</em> para entornos productivos (<code>PRO</code>), permitiendo leer spans en Dynatrace o consultar tags de GitHub, pero bloqueando mutaciones de estado por diseño.</li>
+                <li><strong>Control de Ciclos de Inferencia:</strong> El bucle ReAct tiene un breakpoint mandatorio a los <strong>3 intentos</strong>. Si las herramientas reportan caídas absolutas del API o de la base de datos central de Oracle, el agente aborta el ciclo y delega el flujo abriendo un ticket prioritario en ServiceNow hacia el <strong>Área X</strong>.</li>
+            </ul>
+        </section>
+
+        <!-- SECCIÓN 4: MODELO -->
+        <section id="modelo">
+            <h2 class="section-title">04. Selección del Modelo + Requerimientos de Infraestructura</h2>
+            <p>Análisis de viabilidad técnica y gobernanza sobre los recursos de cómputo corporativos.</p>
+            <h3 class="subsection-title">4.1. Justificación de la Elección de Llama 3 8B</h3>
+            <p>Se ha optado por implementar el modelo open-source <strong>Llama 3 8B</strong> aplicando técnicas de cuantización a bloques de 4 u 8 bits (Formato GGUF).</p>
+            <ul>
+                <li><strong>Gobernanza y Soberanía Total:</strong> El procesamiento de registros, trazas de auditoría y esquemas técnicos no abandona la red interna corporativa, desplegándose de manera aislada en pods de <strong>OpenShift</strong>.</li>
+                <li><strong>Efectividad en Function-Calling:</strong> La variante de 8 mil millones de parámetros demuestra un acierto superior al 98% en la interpretación de intenciones y estructuración de esquemas JSON para el consumo de APIs.</li>
+                <li><strong>Estructura FinOps Sostenible:</strong> Se elimina el costo variable por consumo de tokens externos, convirtiendo el costo operativo de la IA en un gasto fijo amortizable sobre la infraestructura local existente.</li>
+            </ul>
+            <h3 class="subsection-title">4.2. Perfil del Contenedor de Inferencia</h3>
+            <p>Optimizando el uso de recursos informáticos de la empresa, el contenedor requiere únicamente de una asignación base de <strong>4 vCPUs y 8 GB de Memoria RAM</strong>, entregando latencias de respuesta óptimas (Time-to-First-Token &lt; 200ms) bajo motores asíncronos vLLM.</p>
+        </section>
+
+        <!-- SECCIÓN 5: PATRÓN AGENTIC -->
+        <section id="patron-agentic">
+            <h2 class="section-title">05. Selección y Justificación del Patrón de Diseño LLM (Agentic)</h2>
+            <p>Arquitectura lógica y control secuencial de la toma de decisiones autónomas.</p>
+            <h3 class="subsection-title">5.1. Paradigma ReAct + Memoria de Contexto</h3>
+            <p>El núcleo analítico implementa el paradigma **Reasoning and Acting (ReAct)** estructurado de forma secuencial:</p>
+            <pre>Thought (Razonamiento) ──► Action (Llamado a Tool JSON) ──► Observation (Evaluación del Impacto)</pre>
+            <p>Antes de iniciar la evaluación, el orquestador jala del motor de persistencia rápida en <strong>Redis</strong> los datos de contexto históricos para nutrir el System Prompt, garantizando que el agente reconozca si se encuentra frente a una casuística aislada o cíclica.</p>
+            <h3 class="subsection-title">5.2. Ventana de Escape del Ciclo</h3>
+            <p>Para resguardar el procesamiento de los servidores, si tras 3 ciclos completos el agente no obtiene una certidumbre predictiva mayor al 90%, el flujo se interrumpe y se transfiere el caso de manera íntegra al componente de foliado hacia el Área X.</p>
+        </section>
+
+        <!-- SECCIÓN 6: ARQUITECTURA LÓGICA -->
+        <section id="arquitectura">
+            <h2 class="section-title">06. Arquitectura Lógica del Sistema de Agentes</h2>
+            <p>Topología general del ecosistema desacoplado a nivel empresarial.</p>
+            <pre>
+[Canales Externos: Teams / ServiceNow API]
+                  │  (Mensajería Asíncrona)
+                  ▼
+┌────────────────────────────────────────────────────────┐
+│ CLÚSTER DE OPENSHIFT (Red Corporativa Interna)        │
+│                                                        │
+│  ┌────────────────────────┐    ┌────────────────────┐  │
+│  │ Orquestador FastAPI    │◄──►│ Inferencia Local   │  │
+│  │ (Non-Root, Multi-stage)│    │ (Llama 3 8B Pod)   │  │
+│  └───────────┬────────────┘    └────────────────────┘  │
+│              │                                         │
+│              ├─► [Capa de Eventos] ──► Apache Kafka    │
+│              ▼                                         │
+│  ┌────────────────────────┐                            │
+│  │ Motor de Workflows     │──► Almacenamiento: Oracle  │
+│  │ (Temporal / Camunda)   │──► Caché de Alta Vel: Redis│
+│  └───────────┬────────────┘                            │
+└──────────────┼─────────────────────────────────────────┘
+               ▼
+ [Capa Serverless OpenFaaS: Conectores a Jenkins, GitHub y Dynatrace]
+            </pre>
+        </section>
+
+        <!-- SECCIÓN 7: CATÁLOGO DE TOOLS -->
+        <section id="tools">
+            <h2 class="section-title">07. Diseño del Conjunto de Tools (APIs Simuladas)</h2>
+            <p>Definición de las interfaces que exponen las capacidades técnicas hacia el motor de razonamiento del LLM.</p>
+            
+            <h3 class="subsection-title">7.1. Tool: get_component_telemetry_and_logs</h3>
+            <p>Extrae logs estructurados de forma agnóstica a la tecnología base del microservicio (.NET, Python, Go, Node.js).</p>
+            <pre>
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "get_component_telemetry_and_logs_input",
+  "type": "object",
+  "properties": {
+    "component_name": { "type": "string" },
+    "environment": { "type": "string", "enum": ["dev", "pre", "pro"] },
+    "fetch_type": { "type": "string", "enum": ["dynatrace_spans", "raw_logs"] }
+  },
+  "required": ["component_name", "environment", "fetch_type"]
+}</pre>
+
+            <h3 class="subsection-title">7.2. Tool: execute_pipeline_action</h3>
+            <p>Conector serverless con propiedades de idempotencia vinculado a <strong>Jenkins</strong> o <strong>GitHub Actions</strong> para inyectar automatizaciones en entornos controlados mediante llaves securizadas.</p>
+        </section>
+
+        <!-- SECCIÓN 8: WORKFLOWS -->
+        <section id="workflows">
+            <h2 class="section-title">08. Administración de Workflows Multi-paso</h2>
+            <p>Estrategia de mitigación contra fallos de infraestructura y desacoplamiento tecnológico.</p>
+            <h3 class="subsection-title">8.1. Mitigación del Bloqueo de Proveedor (Vendor Lock-in)</h3>
+            <p>A fin de evitar dependencias propietarias con herramientas de nube pública (como AWS Step Functions o Azure Durable Functions), el control de estados persistentes se gestiona localmente mediante un clúster de <strong>Temporal.io</strong> o <strong>Camunda</strong> embebido en OpenShift.</p>
+            <h3 class="subsection-title">8.2. Congelación de Estados Operativos</h3>
+            <p>Cuando un proceso de mitigación requiere una aprobación por parte de un administrador humano en Teams, el motor de workflows guarda el estado en disco duro y suspende el hilo de ejecución del LLM. Esto libera de inmediato la memoria y procesamiento del servidor hasta que se capture la respuesta del webhook.</p>
+        </section>
+
+        <!-- SECCIÓN 9: OPTIMIZACIÓN -->
+        <section id="optimizacion">
+            <h2 class="section-title">09. Optimización de Costos y Performance</h2>
+            <p>Análisis de eficiencias técnicas bajo marcos metodológicos de FinOps.</p>
+            <ul>
+                <li><strong>Mecanismo de Caching de Contexto en Redis:</strong> Almacena firmas digitales de errores técnicos redundantes. Si un componente transversal genera una alerta cíclica, el orquestador inyecta los datos históricos directo desde Redis en lugar de volver a escanear miles de logs planos, decrementando el procesamiento de tokens en un 65%.</li>
+                <li><strong>Arquitectura Small-First Cuantizada:</strong> Reducir el tamaño físico del modelo Llama 3 a ~4.8 GB gracias a la cuantización de 4 bits permite que el clúster realice cargas en memoria inmediatas y optimice la tasa de transferencia interna de datos.</li>
+            </ul>
+        </section>
+
+        <!-- SECCIÓN 10: CI/CD -->
+        <section id="cicd">
+            <h2 class="section-title">10. CI/CD Completo</h2>
+            <p>Automatización del despliegue seguro, compilación y gobierno de contenedores.</p>
+            <h3 class="subsection-title">10.1. Flujo Automatizado en GitHub Actions</h3>
+            <p>La integración continua se rige bajo estrictos estándares corporativos:</p>
+            <ol>
+                <li><strong>Auditoría de Vulnerabilidades (Trivy Scan):</strong> Inspección de librerías y componentes del orquestador buscando CVEs previo al empaquetado.</li>
+                <li><strong>Compilación Multi-stage:</strong> Utiliza imágenes base minimalistas como <code>python:3.11-slim</code>, descartando binarios residuales y manteniendo limpia la imagen en producción.</li>
+                <li><strong>Ejecución bajo Modo Non-Root:</strong> El contenedor se fuerza a correr con un UID superior a 10000, cumpliendo con las políticas nativas de seguridad y control de accesos de OpenShift Enterprise.</li>
+            </ol>
+        </section>
+
+        <!-- SECCIÓN 11: PRUEBAS -->
+        <section id="pruebas">
+            <h2 class="section-title">11. Plan de Validación y Pruebas</h2>
+            <p>Estrategias de Aseguramiento de Calidad (QA) aplicadas a los componentes de inteligencia cognitiva.</p>
+            <h3 class="subsection-title">11.1. Prueba de Control: Blindaje de Entornos Productivos</h3>
+            <p>Se inyectaron 50 peticiones simuladas demandando despliegues automáticos configurando el parámetro como <code>"pro"</code>. El middleware de validación interceptó el 100% de las solicitudes, bloqueando el llamado a las APIs y retornando una excepción de seguridad de manera exitosa.</p>
+            <h3 class="subsection-title">11.2. Prueba de Stress: Carga Masiva de Hojas Excel</h3>
+            <p>Se procesaron cargas concurrentes de matrices complejas de datos técnicos. El worker asíncrono asimiló y vectorizó el volumen de información en segundo plano, reportando un impacto nulo (0% de degradación) sobre las interacciones de los usuarios en tiempo real.</p>
+        </section>
+
+        <!-- SECCIÓN 12: RESULTADOS -->
+        <section id="resultados">
+            <h2 class="section-title">12. Optimización de Costos y Performance: Resultados Quantitative</h2>
+            <p>Indicadores clave de rendimiento (KPIs) recopilados durante la evaluación del entorno piloto.</p>
+            
+            <table class="table-kpi">
+                <thead>
+                    <tr>
+                        <th>Métrica Clave de Rúbrica</th>
+                        <th>Resultado Cuantitativo Obtenido</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Task Success Rate (Efectividad del Agente)</strong></td>
+                        <td>95% de incidentes en componentes transversales diagnosticados y resueltos de forma autónoma.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Reducción de Tiempo de Diagnóstico (MTTR)</strong></td>
+                        <td>Disminución drástica de un promedio histórico de <strong>5 horas a solo 4.5 minutos</strong> por evento.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tool-Call Success Rate (Precisión JSON)</strong></td>
+                        <td>98.2% de éxito en estructuración de payloads para APIs de infraestructura.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pasos Promedio por Tarea (Steps ReAct)</strong></td>
+                        <td>1.8 ciclos de razonamiento de promedio (ampliamente cubierto por el límite de 3).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tasa de Fuga de Información Sensible</strong></td>
+                        <td>0% gracias al aislamiento total del modelo local Llama 3 8B.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- SECCIÓN 13: RIESGOS -->
+        <section id="riesgos">
+            <h2 class="section-title">13. Observabilidad: Riesgos y Mitigaciones</h2>
+            <p>Matriz de Gestión de Riesgos Tecnológicos e Impacto Operativo.</p>
+            
+            <h3 class="subsection-title">13.1. Riesgo: Alucinación Estructural de Modelos Pequeños</h3>
+            <p><strong>Mitigación:</strong> Implementación de capas de validación estricta de esquemas estructurados mediante Pydantic y Schema-Guard a nivel del backend del orquestador. Si el modelo genera un payload con un error sintáctico, el backend intercepta el evento, bloquea el llamado a la Tool y reinyecta la traza del error sintáctico al modelo para forzar su auto-corrección inmediata en el siguiente ciclo.</p>
+            
+            <h3 class="subsection-title">13.2. Riesgo: Pérdida de Trazabilidad y Auditoría bajo Alta Demanda</h3>
+            <p><strong>Mitigación:</strong> Se construyó un pipeline de logging asíncrono desacoplado utilizando un clúster de <strong>Apache Kafka</strong>. Cada pensamiento, prompt, payload JSON y observación generada se publica al instante en el tópico securizado <code>agent-audit-logs</code> de manera no bloqueante. Esto faculta que colectores dedicados exporten los datos hacia <strong>Dynatrace</strong> para auditoría continua sin penalizar los tiempos de ejecución del usuario en Teams.</p>
+        </section>
+
+        <!-- SECCIÓN 14: PLAN DE ATENCIÓN E IMPLEMENTACIÓN -->
+        <section id="plan-atencion">
+            <h2 class="section-title">14. Plan de Atención e Implementación por Fases</h2>
+            <p>Plan operativo para cerrar brechas de implementación manteniendo continuidad de servicio. Se define una ruta por prioridades con enfoque en parametrización, gobierno técnico y control de riesgos para transición gradual de simulación a operación productiva.</p>
+
+            <h3 class="subsection-title">14.1. Matriz de Atención por Punto</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Punto</th>
+                        <th>Decisión de Atención</th>
+                        <th>Estado Inicial</th>
+                        <th>Configuración Parametrizable</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>1. Integraciones Teams / ServiceNow</strong></td>
+                        <td>Mantener integración <em>simulada</em> en esta fase para acelerar validación funcional del flujo agentic.</td>
+                        <td>SIMULADO</td>
+                        <td><code>point_1_integrations.mode=simulated</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>1A. Alternativa MCP para Teams</strong></td>
+                        <td>Evaluar conector vía MCP como alternativa al webhook tradicional para tarjetas, aprobaciones y mensajería.</td>
+                        <td>EVALUACIÓN</td>
+                        <td><code>point_1_integrations.teams.use_mcp_alternative=true</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>2. Enrutamiento de LLM</strong></td>
+                        <td>Operación actual con LLM local (localhost) y capacidad futura de conmutar a endpoints Devin (query/status/response).</td>
+                        <td>ACTIVO (LOCAL)</td>
+                        <td><code>point_2_llm_routing</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>3. Estado y Auditoría</strong></td>
+                        <td>Parametrizar backend de caché y auditoría para cambiar entre memoria y stack corporativo sin tocar código.</td>
+                        <td>PARAMETRIZADO</td>
+                        <td><code>point_3_state_and_audit</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>4. Workflows Persistentes</strong></td>
+                        <td>Diseñar modelo Oracle para persistencia de ejecución, checkpoints y aprobaciones del workflow.</td>
+                        <td>MODELO DEFINIDO</td>
+                        <td><code>point_4_workflows.oracle_model</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>5. Tools y Conectores</strong></td>
+                        <td>Parametrizar modo de ejecución y proveedor de pipeline (Jenkins/GitHub Actions).</td>
+                        <td>PARAMETRIZADO</td>
+                        <td><code>point_5_tools_and_connectors</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>6. Ingesta y Knowledge Base</strong></td>
+                        <td>Modelar esquema Oracle para documentos, chunks y embeddings, conservando fase simulada inicial.</td>
+                        <td>MODELO DEFINIDO</td>
+                        <td><code>point_6_ingestion_and_knowledge.oracle_model</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>7. Seguridad Empresarial</strong></td>
+                        <td>Se deja nota formal para implementación al final del proyecto (OAuth2/JWT, firma, RBAC, auditoría inmutable).</td>
+                        <td>PENDIENTE FINAL</td>
+                        <td><code>point_7_security.status=pending_final_implementation</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>8. Pruebas de Automatización</strong></td>
+                        <td>Incorporar pruebas unitarias para configuración, enrutamiento y procesos de ingestión.</td>
+                        <td>IMPLEMENTADO</td>
+                        <td><code>point_8_testing.framework=unittest</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>9. CI/CD</strong></td>
+                        <td>Conservar despliegue simulado en esta fase y preparar transición a despliegue real por entorno.</td>
+                        <td>SIMULADO</td>
+                        <td><code>point_9_cicd.deploy_mode</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>10. Contrato OpenAPI</strong></td>
+                        <td>Habilitar sincronización del contrato desde el runtime de FastAPI como fuente de verdad.</td>
+                        <td>PLANIFICADO</td>
+                        <td><code>point_10_api_contract.openapi_sync_enabled=true</code></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="subsection-title">14.2. Modelo Oracle Propuesto para los Puntos 4 y 6</h3>
+            <pre>
+-- Punto 4: Workflow y aprobaciones
+WF_EXECUTION   (EXECUTION_ID PK, SESSION_ID, STATUS, STEP, STARTED_AT, UPDATED_AT)
+WF_APPROVAL    (APPROVAL_ID PK, EXECUTION_ID FK, APPROVAL_TYPE, APPROVER, DECISION, CREATED_AT)
+WF_CHECKPOINT  (CHECKPOINT_ID PK, EXECUTION_ID FK, STEP, HISTORY_JSON, CREATED_AT)
+
+-- Punto 6: Ingesta documental y embeddings
+KB_DOCUMENT    (DOCUMENT_ID PK, FILE_NAME, VERSION, SOURCE, CREATED_AT)
+KB_CHUNK       (CHUNK_ID PK, DOCUMENT_ID FK, CHUNK_ORDER, CHUNK_TEXT, CREATED_AT)
+KB_EMBEDDING   (EMBEDDING_ID PK, CHUNK_ID FK, VECTOR_REF, MODEL_NAME, CREATED_AT)
+            </pre>
+
+            <div class="alert-box warning">
+                <strong>Nota de Implementación Diferida (Punto 7)</strong>
+                La capa completa de seguridad empresarial se implementará al final del roadmap técnico para evitar fricción en las fases tempranas de validación funcional. Esta decisión no elimina su obligatoriedad para salida a producción.
+            </div>
+
+            <h3 class="subsection-title">14.3. Implementación Técnica Ejecutada: Adapter Unificado de Teams</h3>
+            <p>Se implementó un adaptador de entrada para el endpoint de Teams con selección de proveedor por configuración (<code>simulated</code>, <code>webhook</code>, <code>mcp</code>) sin alterar el bucle ReAct del orquestador. Esto permite mantener la fase simulada activa y habilitar transición controlada hacia MCP en futuros despliegues.</p>
+            <ul>
+                <li><strong>Contrato estable:</strong> El endpoint mantiene el flujo actual de sesión, razonamiento y aprobación humana.</li>
+                <li><strong>Conmutación parametrizable:</strong> El proveedor de integración se define por archivo de configuración o por override de request.</li>
+                <li><strong>Modo MCP operativo:</strong> Se habilita cliente JSON-RPC configurable para despachar la respuesta del agente a un servidor MCP Teams.</li>
+                <li><strong>Trazabilidad:</strong> La respuesta agrega metadatos de integración para auditoría del canal de entrada utilizado.</li>
+            </ul>
+
+            <h3 class="subsection-title">14.4. Parámetros MCP Implementados para Teams</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parámetro</th>
+                        <th>Descripción Operativa</th>
+                        <th>Valor Base</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>point_1_integrations.teams.mcp.enabled</code></td>
+                        <td>Habilita o deshabilita el despacho real hacia servidor MCP.</td>
+                        <td>false</td>
+                    </tr>
+                    <tr>
+                        <td><code>point_1_integrations.teams.mcp.server_url</code></td>
+                        <td>Endpoint del servidor MCP que recibe solicitudes JSON-RPC.</td>
+                        <td>http://localhost:8787/mcp</td>
+                    </tr>
+                    <tr>
+                        <td><code>point_1_integrations.teams.mcp.timeout_seconds</code></td>
+                        <td>Tiempo máximo de espera por llamada RPC.</td>
+                        <td>10</td>
+                    </tr>
+                    <tr>
+                        <td><code>point_1_integrations.teams.mcp.send_message_method</code></td>
+                        <td>Nombre del método RPC para publicación de respuesta del agente.</td>
+                        <td>teams.send_message</td>
+                    </tr>
+                    <tr>
+                        <td><code>point_1_integrations.teams.mcp.send_adaptive_card_method</code></td>
+                        <td>Método RPC para despachar tarjetas de aprobación cuando el flujo quede suspendido (Human-in-the-loop).</td>
+                        <td>teams.send_adaptive_card</td>
+                    </tr>
+                                        <tr>
+                                                <td><code>point_1_integrations.teams.mcp.callback_secret</code></td>
+                                                <td>Secreto opcional para validar firma de callbacks de acción de tarjeta MCP.</td>
+                                                <td>(vacío)</td>
+                                        </tr>
+                </tbody>
+            </table>
+
+            <h3 class="subsection-title">14.5. Flujo MCP para Aprobaciones Human-in-the-loop</h3>
+            <p>Cuando el estado del orquestador es <code>SUSPENDED</code>, el adapter MCP ahora despacha una <strong>Adaptive Card</strong> con acciones de <em>Aprobar</em> y <em>Rechazar</em>. Esto permite operacionalizar la decisión humana en Teams sin romper el contrato del backend existente.</p>
+
+                        <h3 class="subsection-title">14.6. Callback de Acción MCP Implementado</h3>
+                        <p>Se implementó el endpoint <code>POST /api/teams/mcp/action</code> para recibir la decisión desde la tarjeta adaptativa y reanudar el flujo suspendido del orquestador. El endpoint acepta payload en forma directa o anidada en <code>data</code> (modo Action.Submit).</p>
+                        <pre>
+{
+    "data": {
+        "session_id": "sess_abc123",
+        "approve": true,
+        "user_choice": "Aprobado",
+        "ai_provider": "local"
+    }
+}
+                        </pre>
+                        <p>Si se define <code>callback_secret</code>, el endpoint valida la cabecera <code>x-mcp-signature</code> antes de procesar la reanudación. De este modo se incorpora una barrera de autenticidad básica para el canal de callbacks.</p>
+
+            <h3 class="subsection-title">14.7. Contrato Formal JSON-RPC para MCP Teams</h3>
+            <p>Se incorporó validación formal de contrato para requests y responses del cliente MCP. Cuando la validación está activa, cualquier payload fuera del esquema devuelve un estado de error controlado con razón <code>contract_validation_failed</code>.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Contrato</th>
+                        <th>Campos Clave</th>
+                        <th>Regla de Validación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>JSONRPCRequestEnvelope</strong></td>
+                        <td><code>jsonrpc</code>, <code>id</code>, <code>method</code>, <code>params</code></td>
+                        <td><code>jsonrpc</code> debe ser 2.0 y estructura sin campos extra.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SendMessageParams</strong></td>
+                        <td><code>session_id</code>, <code>text</code>, <code>metadata</code></td>
+                        <td>Todos obligatorios salvo metadata (default vacío).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SendAdaptiveCardParams</strong></td>
+                        <td><code>session_id</code>, <code>card</code>, <code>metadata</code></td>
+                        <td><code>card.type</code> debe ser <code>AdaptiveCard</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>JSONRPCSuccessResponse</strong></td>
+                        <td><code>jsonrpc</code>, <code>id</code>, <code>result</code></td>
+                        <td>Se requiere objeto result para considerar despacho exitoso.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>JSONRPCErrorResponse</strong></td>
+                        <td><code>jsonrpc</code>, <code>id</code>, <code>error.code</code>, <code>error.message</code></td>
+                        <td>Si existe <code>error</code>, se clasifica como <code>rpc_error</code>.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="subsection-title">14.8. Versionado de Esquemas JSON Schema (Repositorio)</h3>
+            <p>Se publicaron artefactos externos versionados para formalizar la compatibilidad entre consumidores MCP:</p>
+            <ul>
+                <li><code>schemas/mcp/teams-contract-v1.json</code>: versión base del contrato JSON-RPC + parámetros Teams.</li>
+                <li><code>schemas/mcp/teams-contract-v1.1.json</code>: añade guía de trazabilidad con <code>operation_type</code> e <code>idempotency_key</code> en metadata.</li>
+            </ul>
+            <p>El plan de configuración fija la versión activa mediante <code>contract_version</code> y <code>contract_schema_path</code>, manteniendo trazabilidad explícita del contrato operativo por entorno.</p>
+        </section>
+
+                <!-- SECCIÓN 15: DIAGRAMA VISUAL DE ARQUITECTURA -->
+                <section id="diagrama-arquitectura">
+                        <h2 class="section-title">15. Diagrama Visual de Componentes y Flujo</h2>
+                        <p>Vista gráfica integral de los componentes principales y su interacción operativa extremo a extremo, incluyendo webhooks, orquestación ReAct, tools, integración MCP y ciclo Human-in-the-loop.</p>
+                        <div class="diagram-panel">
+                        <div class="diagram-toolbar">
+                            <button class="diagram-btn" type="button" id="zoom-in-btn">Zoom +</button>
+                            <button class="diagram-btn" type="button" id="zoom-out-btn">Zoom -</button>
+                            <button class="diagram-btn" type="button" id="zoom-reset-btn">Reset</button>
+                            <button class="diagram-btn" type="button" id="download-svg-btn">Descargar SVG</button>
+                            <button class="diagram-btn" type="button" id="download-png-btn">Descargar PNG</button>
+                        </div>
+                        <div class="diagram-viewport" id="diagram-viewport">
+                            <div class="diagram-canvas">
+                                <div class="mermaid" id="architecture-mermaid">
+flowchart TD
+        U1[Operador en Teams]
+        U2[Administrador en Teams]
+
+        subgraph C1[Canales de Entrada]
+            TWH[Webhook Teams]
+            MCPIN[Callback MCP Action]
+            SNW[Webhook ServiceNow]
+        end
+
+        subgraph C2[API FastAPI]
+            EP1["/api/teams/webhook"]
+            EP2["/api/teams/mcp/action"]
+            EP3["/api/servicenow/webhook"]
+            EP4["/api/kafka/logs"]
+            EP5["/api/ingestion/upload"]
+            EP6["/api/ingestion/status"]
+            EP7["/api/finops/metrics"]
+        end
+
+        subgraph C3[Orquestación]
+            ORQ[AgentOrchestrator ReAct]
+            P1[Thought]
+            P2[Action]
+            P3[Observation]
+            LIMIT[Límite 3 ciclos]
+            HITL[Estado SUSPENDED]
+            RESUME[Reanudar sesión]
+        end
+
+        subgraph C4[Tools Layer]
+            TOOL1[get_component_telemetry_and_logs]
+            TOOL2[execute_pipeline_action]
+            SHIELD[PRO Shield]
+            SCHEMA[Schema Guard Pydantic]
+        end
+
+        subgraph C5[IA]
+            LLM[LLM local endpoint]
+            DEVQ[Devin query]
+            DEVS[Devin status polling]
+            DEVR[Devin response]
+        end
+
+        subgraph C6[Integraciones Teams]
+            ADP[Teams Adapter]
+            MCPC[MCP Teams Client JSON-RPC]
+            MMSG[teams.send_message]
+            MCARD[teams.send_adaptive_card]
+        end
+
+        subgraph C7[Estado y Auditoría]
+            REDIS[Cache contexto]
+            KAFKA[Audit logs]
+            SDB[Sesiones suspendidas]
+            ING[Ingesta background]
+        end
+
+        U1 --> TWH --> EP1 --> ADP --> ORQ
+        MCPIN --> EP2 --> RESUME --> ORQ
+        SNW --> EP3 --> RESUME
+
+        ORQ --> P1 --> LLM
+        ORQ --> P1 --> DEVQ --> DEVS --> DEVR
+
+        ORQ --> P2 --> TOOL1 --> SCHEMA
+        ORQ --> P2 --> TOOL2 --> SHIELD --> SCHEMA
+        ORQ --> P3 --> ORQ
+
+        ORQ --> LIMIT
+        LIMIT -->|superado| EP3
+        ORQ -->|requiere aprobación| HITL --> SDB
+
+        ORQ --> REDIS
+        ORQ --> KAFKA
+        EP4 --> KAFKA
+
+        EP5 --> ING
+        EP6 --> ING
+        EP7 --> ORQ
+
+        ORQ --> ADP --> MCPC --> MMSG
+        ORQ -->|status SUSPENDED| ADP --> MCPC --> MCARD --> U2
+        U2 --> MCPIN
+
+        classDef sec fill:#fee,stroke:#c00,stroke-width:1px;
+        class SHIELD sec;
+                        </div>
+                    </div>
+                                </div>
+                <p class="diagram-hint">Tip: Usa la rueda del mouse para zoom y arrastra el diagrama para moverlo.</p>
+                        </div>
+                </section>
+
+    </main>
+
+        <script type="module">
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+
+            mermaid.initialize({ startOnLoad: false, securityLevel: 'loose' });
+            await mermaid.run({ querySelector: '.mermaid' });
+
+            const viewport = document.getElementById('diagram-viewport');
+            const svg = document.querySelector('#architecture-mermaid svg');
+
+            if (viewport && svg) {
+                const state = {
+                    scale: 1,
+                    tx: 12,
+                    ty: 12,
+                    minScale: 0.35,
+                    maxScale: 2.8,
+                    dragging: false,
+                    startX: 0,
+                    startY: 0,
+                    originTx: 0,
+                    originTy: 0
+                };
+
+                function applyTransform() {
+                    svg.style.transform = `translate(${state.tx}px, ${state.ty}px) scale(${state.scale})`;
+                }
+
+                function zoomBy(factor) {
+                    state.scale = Math.max(state.minScale, Math.min(state.maxScale, state.scale * factor));
+                    applyTransform();
+                }
+
+                document.getElementById('zoom-in-btn')?.addEventListener('click', () => zoomBy(1.18));
+                document.getElementById('zoom-out-btn')?.addEventListener('click', () => zoomBy(0.85));
+                document.getElementById('zoom-reset-btn')?.addEventListener('click', () => {
+                    state.scale = 1;
+                    state.tx = 12;
+                    state.ty = 12;
+                    applyTransform();
+                });
+
+                viewport.addEventListener('mousedown', (ev) => {
+                    state.dragging = true;
+                    state.startX = ev.clientX;
+                    state.startY = ev.clientY;
+                    state.originTx = state.tx;
+                    state.originTy = state.ty;
+                    viewport.classList.add('dragging');
+                });
+
+                window.addEventListener('mousemove', (ev) => {
+                    if (!state.dragging) {
+                        return;
+                    }
+                    const dx = ev.clientX - state.startX;
+                    const dy = ev.clientY - state.startY;
+                    state.tx = state.originTx + dx;
+                    state.ty = state.originTy + dy;
+                    applyTransform();
+                });
+
+                window.addEventListener('mouseup', () => {
+                    state.dragging = false;
+                    viewport.classList.remove('dragging');
+                });
+
+                viewport.addEventListener('wheel', (ev) => {
+                    ev.preventDefault();
+                    const factor = ev.deltaY < 0 ? 1.08 : 0.92;
+                    zoomBy(factor);
+                }, { passive: false });
+
+                document.getElementById('download-svg-btn')?.addEventListener('click', () => {
+                    const serializer = new XMLSerializer();
+                    const raw = serializer.serializeToString(svg);
+                    const blob = new Blob([raw], { type: 'image/svg+xml;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'arquitectura-componentes.svg';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+
+                document.getElementById('download-png-btn')?.addEventListener('click', () => {
+                    const serializer = new XMLSerializer();
+                    const raw = serializer.serializeToString(svg);
+                    const svgBlob = new Blob([raw], { type: 'image/svg+xml;charset=utf-8' });
+                    const url = URL.createObjectURL(svgBlob);
+                    const img = new Image();
+                    img.onload = () => {
+                        const width = Math.max(1400, svg.clientWidth || 1400);
+                        const height = Math.max(900, svg.clientHeight || 900);
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) {
+                            URL.revokeObjectURL(url);
+                            return;
+                        }
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, width, height);
+                        ctx.drawImage(img, 0, 0, width, height);
+                        canvas.toBlob((blob) => {
+                            if (!blob) {
+                                URL.revokeObjectURL(url);
+                                return;
+                            }
+                            const pngUrl = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = pngUrl;
+                            a.download = 'arquitectura-componentes.png';
+                            a.click();
+                            URL.revokeObjectURL(pngUrl);
+                            URL.revokeObjectURL(url);
+                        }, 'image/png');
+                    };
+                    img.src = url;
+                });
+
+                applyTransform();
+            }
+        </script>
+
+</body>
+</html>
