@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proyecto 3: Arquitectura de Agentes con Serverless y Tools - BSG Institute</title>
+    <title>Proyecto 3: Arquitectura de Agentes con Serverless y Tools </title>
     <style>
         :root {
             --primary: #0F172A; /* Azul Pizarra Oscuro / Ejecutivo */
@@ -400,7 +400,6 @@
             <h1>LLM Agentic Architecture with Serverless Tools Integration</h1>
             <p>Especificación de Diseño de Infraestructura Escalable — Proyecto 3</p>
             <div class="meta-grid">
-                <div><strong>Institución Aval</strong>BSG Institute</div>
                 <div><strong>Consultor de Cátedra</strong>Msc, PgP, Andrés Felipe Rojas Parra</div>
                 <div><strong>Nivel de Proyecto</strong>Avanzado / Agentes + Workflows</div>
                 <div><strong>Esquema Técnico</strong>OpenShift / Kafka / Llama 3 8B</div>
@@ -700,9 +699,9 @@
                     </tr>
                     <tr>
                         <td><strong>1A. Alternativa MCP para Teams</strong></td>
-                        <td>Evaluar conector vía MCP como alternativa al webhook tradicional para tarjetas, aprobaciones y mensajería.</td>
-                        <td>EVALUACIÓN</td>
-                        <td><code>point_1_integrations.teams.use_mcp_alternative=true</code></td>
+                        <td>Evaluada y <strong>descartada</strong> (jun 2026). Se consolida la integración por <em>Incoming Webhook</em> (Power Automate) para salida y <em>Outlook COM</em> para entrada. El transporte MCP (stdio/JSON-RPC) fue retirado del código por no aportar valor frente al webhook en este entorno corporativo.</td>
+                        <td>RETIRADO</td>
+                        <td><code>teams_mode=webhook</code></td>
                     </tr>
                     <tr>
                         <td><strong>2. Enrutamiento de LLM</strong></td>
@@ -780,126 +779,78 @@ KB_EMBEDDING   (EMBEDDING_ID PK, CHUNK_ID FK, VECTOR_REF, MODEL_NAME, CREATED_AT
             </div>
 
             <h3 class="subsection-title">14.3. Implementación Técnica Ejecutada: Adapter Unificado de Teams</h3>
-            <p>Se implementó un adaptador de entrada para el endpoint de Teams con selección de proveedor por configuración (<code>simulated</code>, <code>webhook</code>, <code>mcp</code>) sin alterar el bucle ReAct del orquestador. Esto permite mantener la fase simulada activa y habilitar transición controlada hacia MCP en futuros despliegues.</p>
+            <p>Se implementó un adaptador de salida para Teams con selección de proveedor por configuración (<code>simulated</code>, <code>webhook</code>) sin alterar el bucle ReAct del orquestador. El proveedor activo es <code>webhook</code> (Incoming Webhook de Power Automate).</p>
             <ul>
                 <li><strong>Contrato estable:</strong> El endpoint mantiene el flujo actual de sesión, razonamiento y aprobación humana.</li>
-                <li><strong>Conmutación parametrizable:</strong> El proveedor de integración se define por archivo de configuración o por override de request.</li>
-                <li><strong>Modo MCP operativo:</strong> Se habilita cliente JSON-RPC configurable para despachar la respuesta del agente a un servidor MCP Teams.</li>
-                <li><strong>Trazabilidad:</strong> La respuesta agrega metadatos de integración para auditoría del canal de entrada utilizado.</li>
+                <li><strong>Conmutación parametrizable:</strong> El proveedor de integración se define por archivo de configuración (<code>teams_mode</code>).</li>
+                <li><strong>Trazabilidad:</strong> La respuesta agrega metadatos de integración para auditoría del canal utilizado.</li>
             </ul>
 
-            <h3 class="subsection-title">14.4. Parámetros MCP Implementados para Teams</h3>
+            <h3 class="subsection-title">14.4. Flujos en Operación (estado actual)</h3>
+            <p>Tras la simplificación de junio 2026, estos son los flujos <strong>activos</strong> del sistema. Cada listener/poller arranca como proceso independiente y comparte el <em>SessionStore</em> (Redis).</p>
             <table>
                 <thead>
                     <tr>
-                        <th>Parámetro</th>
-                        <th>Descripción Operativa</th>
-                        <th>Valor Base</th>
+                        <th>Flujo</th>
+                        <th>Componente</th>
+                        <th>Estado</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><code>point_1_integrations.teams.mcp.enabled</code></td>
-                        <td>Habilita o deshabilita el despacho real hacia servidor MCP.</td>
-                        <td>false</td>
+                        <td><strong>Entrada Teams</strong></td>
+                        <td><code>OutlookComListener</code> (<code>scripts/run_outlook_listener.py</code>): lee notificaciones de Teams desde el Outlook de escritorio (COM/MAPI) ya autenticado. Filtra por asunto/remitente y por prefijo de disparo <code>SoporteGD</code>.</td>
+                        <td>ACTIVO</td>
                     </tr>
                     <tr>
-                        <td><code>point_1_integrations.teams.mcp.server_url</code></td>
-                        <td>Endpoint del servidor MCP que recibe solicitudes JSON-RPC.</td>
-                        <td>http://localhost:8787/mcp</td>
+                        <td><strong>Salida Teams</strong></td>
+                        <td><code>TeamsAdapter</code> + <code>TeamsWebhookClient</code>: publica Adaptive Cards por el <em>Incoming Webhook</em> de Power Automate (<code>teams_mode=webhook</code>).</td>
+                        <td>ACTIVO</td>
                     </tr>
                     <tr>
-                        <td><code>point_1_integrations.teams.mcp.timeout_seconds</code></td>
-                        <td>Tiempo máximo de espera por llamada RPC.</td>
-                        <td>10</td>
+                        <td><strong>Asíncrono Devin</strong></td>
+                        <td><code>DevinResumePoller</code> (<code>scripts/run_devin_poller.py</code>): reanuda sesiones <code>WAITING_DEVIN</code> y publica la respuesta final al canal.</td>
+                        <td>ACTIVO</td>
                     </tr>
                     <tr>
-                        <td><code>point_1_integrations.teams.mcp.send_message_method</code></td>
-                        <td>Nombre del método RPC para publicación de respuesta del agente.</td>
-                        <td>teams.send_message</td>
+                        <td><strong>Asistente de folios</strong></td>
+                        <td><code>FolioAssistant</code>: conversación multi-turno que recolecta servicio, componente, entorno, descripción y contacto, con pre-rellenado desde el primer mensaje.</td>
+                        <td>ACTIVO</td>
                     </tr>
                     <tr>
-                        <td><code>point_1_integrations.teams.mcp.send_adaptive_card_method</code></td>
-                        <td>Método RPC para despachar tarjetas de aprobación cuando el flujo quede suspendido (Human-in-the-loop).</td>
-                        <td>teams.send_adaptive_card</td>
-                    </tr>
-                                        <tr>
-                                                <td><code>point_1_integrations.teams.mcp.callback_secret</code></td>
-                                                <td>Secreto opcional para validar firma de callbacks de acción de tarjeta MCP.</td>
-                                                <td>(vacío)</td>
-                                        </tr>
-                </tbody>
-            </table>
-
-            <h3 class="subsection-title">14.5. Flujo MCP para Aprobaciones Human-in-the-loop</h3>
-            <p>Cuando el estado del orquestador es <code>SUSPENDED</code>, el adapter MCP ahora despacha una <strong>Adaptive Card</strong> con acciones de <em>Aprobar</em> y <em>Rechazar</em>. Esto permite operacionalizar la decisión humana en Teams sin romper el contrato del backend existente.</p>
-
-                        <h3 class="subsection-title">14.6. Callback de Acción MCP Implementado</h3>
-                        <p>Se implementó el endpoint <code>POST /api/teams/mcp/action</code> para recibir la decisión desde la tarjeta adaptativa y reanudar el flujo suspendido del orquestador. El endpoint acepta payload en forma directa o anidada en <code>data</code> (modo Action.Submit).</p>
-                        <pre>
-{
-    "data": {
-        "session_id": "sess_abc123",
-        "approve": true,
-        "user_choice": "Aprobado",
-        "ai_provider": "local"
-    }
-}
-                        </pre>
-                        <p>Si se define <code>callback_secret</code>, el endpoint valida la cabecera <code>x-mcp-signature</code> antes de procesar la reanudación. De este modo se incorpora una barrera de autenticidad básica para el canal de callbacks.</p>
-
-            <h3 class="subsection-title">14.7. Contrato Formal JSON-RPC para MCP Teams</h3>
-            <p>Se incorporó validación formal de contrato para requests y responses del cliente MCP. Cuando la validación está activa, cualquier payload fuera del esquema devuelve un estado de error controlado con razón <code>contract_validation_failed</code>.</p>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Contrato</th>
-                        <th>Campos Clave</th>
-                        <th>Regla de Validación</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>JSONRPCRequestEnvelope</strong></td>
-                        <td><code>jsonrpc</code>, <code>id</code>, <code>method</code>, <code>params</code></td>
-                        <td><code>jsonrpc</code> debe ser 2.0 y estructura sin campos extra.</td>
+                        <td><strong>ServiceNow</strong></td>
+                        <td><code>ServiceNowClient</code> en modo <code>guidance</code>: devuelve los pasos y el Order Guide del Catálogo Técnico para que el usuario levante el folio (a la espera de credenciales API).</td>
+                        <td>ACTIVO (guidance)</td>
                     </tr>
                     <tr>
-                        <td><strong>SendMessageParams</strong></td>
-                        <td><code>session_id</code>, <code>text</code>, <code>metadata</code></td>
-                        <td>Todos obligatorios salvo metadata (default vacío).</td>
+                        <td><strong>OpenShift</strong></td>
+                        <td><code>OpenShiftCliClient</code> (<code>OPENSHIFT_MODE=cli</code>): diagnóstico multi-clúster (dev, pre) vía <code>oc</code>; <em>pro</em> queda denegado (regla pro = solo Dynatrace).</td>
+                        <td>ACTIVO</td>
                     </tr>
                     <tr>
-                        <td><strong>SendAdaptiveCardParams</strong></td>
-                        <td><code>session_id</code>, <code>card</code>, <code>metadata</code></td>
-                        <td><code>card.type</code> debe ser <code>AdaptiveCard</code>.</td>
-                    </tr>
-                    <tr>
-                        <td><strong>JSONRPCSuccessResponse</strong></td>
-                        <td><code>jsonrpc</code>, <code>id</code>, <code>result</code></td>
-                        <td>Se requiere objeto result para considerar despacho exitoso.</td>
-                    </tr>
-                    <tr>
-                        <td><strong>JSONRPCErrorResponse</strong></td>
-                        <td><code>jsonrpc</code>, <code>id</code>, <code>error.code</code>, <code>error.message</code></td>
-                        <td>Si existe <code>error</code>, se clasifica como <code>rpc_error</code>.</td>
+                        <td><strong>HITL (aprobaciones)</strong></td>
+                        <td>Estado <code>SUSPENDED</code> + Adaptive Card de Aprobar/Rechazar. Reanudación vía <code>POST /api/teams/hitl/action</code> o <code>scripts/approve_session.py</code>.</td>
+                        <td>ACTIVO</td>
                     </tr>
                 </tbody>
             </table>
 
-            <h3 class="subsection-title">14.8. Versionado de Esquemas JSON Schema (Repositorio)</h3>
-            <p>Se publicaron artefactos externos versionados para formalizar la compatibilidad entre consumidores MCP:</p>
+            <h3 class="subsection-title">14.5. Simplificación: retiro de MCP Teams e IMAP</h3>
+            <div class="alert-box warning">
+                <strong>Decisión (jun 2026): canales redundantes retirados del código.</strong>
+                Para reducir superficie y mantenimiento se eliminaron dos vías de integración que no aportaban valor frente al par <em>Incoming Webhook</em> + <em>Outlook COM</em>.
+            </div>
             <ul>
-                <li><code>schemas/mcp/teams-contract-v1.json</code>: versión base del contrato JSON-RPC + parámetros Teams.</li>
-                <li><code>schemas/mcp/teams-contract-v1.1.json</code>: añade guía de trazabilidad con <code>operation_type</code> e <code>idempotency_key</code> en metadata.</li>
+                <li><strong>MCP Teams (retirado):</strong> se eliminaron el cliente JSON-RPC (<code>client.py</code>), el cliente stdio del servidor real (<code>mcp_stdio_client.py</code>), el listener por polling (<code>listener.py</code>), los contratos formales (<code>contracts.py</code>) y los textos de aprobación (<code>text.py</code>), junto con sus settings (<code>TeamsMCPSettings</code>, <code>TeamsBotSettings</code>, <code>TeamsTransport</code>) y el modo <code>IntegrationMode.MCP</code>. El <code>TeamsAdapter</code> conserva únicamente los modos <code>webhook</code> y <code>simulated</code>.</li>
+                <li><strong>IMAP (retirado):</strong> se eliminó el listener por correo IMAP (<code>email_listener.py</code>, <code>scripts/run_email_listener.py</code>) y los campos IMAP de configuración. M365 bloquea IMAP basic-auth en el entorno corporativo, por lo que la entrada se hace por Outlook COM.</li>
+                <li><strong>Endpoint HITL:</strong> el antiguo <code>POST /api/teams/mcp/action</code> se renombró a <code>POST /api/teams/hitl/action</code> y dejó de depender de la firma MCP.</li>
             </ul>
-            <p>El plan de configuración fija la versión activa mediante <code>contract_version</code> y <code>contract_schema_path</code>, manteniendo trazabilidad explícita del contrato operativo por entorno.</p>
         </section>
 
                 <!-- SECCIÓN 15: DIAGRAMA VISUAL DE ARQUITECTURA -->
                 <section id="diagrama-arquitectura">
                         <h2 class="section-title">15. Diagrama Visual de Componentes y Flujo</h2>
-                        <p>Vista gráfica integral de los componentes principales y su interacción operativa extremo a extremo, incluyendo webhooks, orquestación ReAct, tools, integración MCP y ciclo Human-in-the-loop.</p>
+                        <p>Vista gráfica integral de los componentes activos y su interacción extremo a extremo: entrada por Outlook COM, salida por Incoming Webhook (Power Automate), orquestación ReAct, tools, asistente de folios, poller de Devin y ciclo Human-in-the-loop.</p>
                         <div class="diagram-panel">
                         <div class="diagram-toolbar">
                             <button class="diagram-btn" type="button" id="zoom-in-btn">Zoom +</button>
@@ -913,26 +864,16 @@ KB_EMBEDDING   (EMBEDDING_ID PK, CHUNK_ID FK, VECTOR_REF, MODEL_NAME, CREATED_AT
                                 <div class="mermaid" id="architecture-mermaid">
 flowchart TD
         U1[Operador en Teams]
-        U2[Administrador en Teams]
+        U2[Aprobador en Teams]
 
-        subgraph C1[Canales de Entrada]
-            TWH[Webhook Teams]
-            MCPIN[Callback MCP Action]
-            SNW[Webhook ServiceNow]
-        end
-
-        subgraph C2[API FastAPI]
-            EP1["/api/teams/webhook"]
-            EP2["/api/teams/mcp/action"]
-            EP3["/api/servicenow/webhook"]
-            EP4["/api/kafka/logs"]
-            EP5["/api/ingestion/upload"]
-            EP6["/api/ingestion/status"]
-            EP7["/api/finops/metrics"]
+        subgraph C1[Entrada]
+            OL[Outlook COM Listener\nprefijo SoporteGD]
+            HITLIN["POST /api/teams/hitl/action"]
         end
 
         subgraph C3[Orquestación]
             ORQ[AgentOrchestrator ReAct]
+            FA[FolioAssistant\nmulti-turno]
             P1[Thought]
             P2[Action]
             P3[Observation]
@@ -944,57 +885,52 @@ flowchart TD
         subgraph C4[Tools Layer]
             TOOL1[get_component_telemetry_and_logs]
             TOOL2[execute_pipeline_action]
+            TOOL3[OpenShift CLI oc\ndev/pre]
+            TOOL4[create_servicenow_folio\nguidance]
             SHIELD[PRO Shield]
             SCHEMA[Schema Guard Pydantic]
         end
 
         subgraph C5[IA]
             LLM[LLM local endpoint]
-            DEVQ[Devin query]
-            DEVS[Devin status polling]
-            DEVR[Devin response]
+            DEVQ[Devin query async]
+            POLLER[DevinResumePoller]
         end
 
-        subgraph C6[Integraciones Teams]
+        subgraph C6[Salida Teams]
             ADP[Teams Adapter]
-            MCPC[MCP Teams Client JSON-RPC]
-            MMSG[teams.send_message]
-            MCARD[teams.send_adaptive_card]
+            WHC[Incoming Webhook\nPower Automate]
         end
 
         subgraph C7[Estado y Auditoría]
-            REDIS[Cache contexto]
+            REDIS[Redis: contexto + sesiones]
             KAFKA[Audit logs]
-            SDB[Sesiones suspendidas]
-            ING[Ingesta background]
         end
 
-        U1 --> TWH --> EP1 --> ADP --> ORQ
-        MCPIN --> EP2 --> RESUME --> ORQ
-        SNW --> EP3 --> RESUME
+        U1 --> OL --> ORQ
+        ORQ --> FA --> ADP
 
         ORQ --> P1 --> LLM
-        ORQ --> P1 --> DEVQ --> DEVS --> DEVR
+        ORQ --> P1 --> DEVQ
+        DEVQ -->|WAITING_DEVIN| REDIS
+        POLLER --> REDIS
+        POLLER --> RESUME --> ORQ
 
         ORQ --> P2 --> TOOL1 --> SCHEMA
         ORQ --> P2 --> TOOL2 --> SHIELD --> SCHEMA
+        ORQ --> P2 --> TOOL3 --> SCHEMA
+        ORQ --> P2 --> TOOL4 --> SCHEMA
         ORQ --> P3 --> ORQ
 
         ORQ --> LIMIT
-        LIMIT -->|superado| EP3
-        ORQ -->|requiere aprobación| HITL --> SDB
+        ORQ -->|requiere aprobación| HITL --> REDIS
 
         ORQ --> REDIS
         ORQ --> KAFKA
-        EP4 --> KAFKA
 
-        EP5 --> ING
-        EP6 --> ING
-        EP7 --> ORQ
-
-        ORQ --> ADP --> MCPC --> MMSG
-        ORQ -->|status SUSPENDED| ADP --> MCPC --> MCARD --> U2
-        U2 --> MCPIN
+        ORQ --> ADP --> WHC --> U1
+        ORQ -->|status SUSPENDED| ADP --> WHC --> U2
+        U2 --> HITLIN --> RESUME
 
         classDef sec fill:#fee,stroke:#c00,stroke-width:1px;
         class SHIELD sec;

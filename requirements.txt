@@ -1,0 +1,33 @@
+# FastAPI + Server
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.9
+pydantic>=2.6.0
+pydantic-settings>=2.2.0
+
+# HTTP client (Devin API, MCP JSON-RPC)
+httpx>=0.27.0
+# Usa el almacen de certificados del SO (CA raiz corporativa / MITM TLS)
+truststore>=0.9.0
+
+# SDK MCP (cliente del servidor real de Teams InditexTech, transporte stdio)
+mcp>=1.2.0
+
+# Estado y mensajeria
+redis>=5.0.0
+kafka-python>=2.0.2
+
+# Persistencia Oracle
+oracledb>=2.1.0
+
+# Ingesta de documentos
+pypdf>=4.0.0
+openpyxl>=3.1.0
+
+# Utilidades
+python-dotenv>=1.0.0
+tenacity>=8.2.0
+
+# Testing
+pytest>=8.0.0
+pytest-asyncio>=0.23.0

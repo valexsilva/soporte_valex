@@ -286,7 +286,7 @@
         <mxCell id="4011" parent="4010" style="shape=image;imageAspect=1;aspect=fixed;image=https://img.icons8.com/color/96/microsoft-teams-2019.png;" value="" vertex="1">
           <mxGeometry height="56" width="56" x="102" as="geometry" />
         </mxCell>
-        <mxCell id="4012" parent="4010" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#8ea9c4;fontStyle=1;fontSize=11;" value="MCP Teams Adapter&#xa;JSON-RPC + Cards" vertex="1">
+        <mxCell id="4012" parent="4010" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#8ea9c4;fontStyle=1;fontSize=11;" value="Teams Adapter&#xa;Incoming Webhook (Power Automate)" vertex="1">
           <mxGeometry height="62" width="260" y="60" as="geometry" />
         </mxCell>
 
@@ -316,7 +316,7 @@
         <mxCell id="4041" parent="4040" style="shape=image;imageAspect=1;aspect=fixed;image=https://img.icons8.com/color/96/code.png;" value="" vertex="1">
           <mxGeometry height="56" width="56" x="224" y="3" as="geometry" />
         </mxCell>
-        <mxCell id="4042" parent="4040" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#8ea9c4;fontStyle=1;fontSize=11;" value="Devin Endpoints&#xa;query / status / response" vertex="1">
+        <mxCell id="4042" parent="4040" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#8ea9c4;fontStyle=1;fontSize=11;" value="Devin (async)&#xa;query + DevinResumePoller" vertex="1">
           <mxGeometry height="62" width="214" as="geometry" />
         </mxCell>
 
@@ -330,7 +330,7 @@
           <mxGeometry height="62" width="214" as="geometry" />
         </mxCell>
 
-        <mxCell id="4060" edge="1" parent="1" source="105" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#8f2d56;strokeWidth=2.2;dashed=1;" target="4012" value="MCP">
+        <mxCell id="4060" edge="1" parent="1" source="105" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#8f2d56;strokeWidth=2.2;dashed=1;" target="4012" value="entrada Outlook COM">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="520" y="390" />
@@ -338,7 +338,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="4061" edge="1" parent="1" source="4012" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#8f2d56;strokeWidth=2.2;dashed=1;" target="123" value="dispatch">
+        <mxCell id="4061" edge="1" parent="1" source="4012" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#8f2d56;strokeWidth=2.2;dashed=1;" target="123" value="salida webhook">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="880" y="612" />
@@ -346,7 +346,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="4062" edge="1" parent="1" source="127" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#8f2d56;strokeWidth=2.2;dashed=1;" target="4012" value="callback">
+        <mxCell id="4062" edge="1" parent="1" source="127" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeColor=#8f2d56;strokeWidth=2.2;dashed=1;" target="4012" value="HITL /hitl/action">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="950" y="870" />
